@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <!-- 領域層：不依賴任何外部框架，保持純 C# -->
+    <RootNamespace>Ets.Domain</RootNamespace>
+    <AssemblyName>Ets.Domain</AssemblyName>
+    <Description>ETS 緊急應變平台 — 領域層（Domain Layer）。包含 Entity、Value Object、Domain Event、Enum。不依賴任何外部 NuGet 套件。</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Folder Include="Enums\" />
+    <Folder Include="Entities\" />
+  </ItemGroup>
+
+  <!-- 領域層刻意不加任何 NuGet 參考 -->
+  <!-- 若需 MediatR INotification 作為 Domain Event 基底介面，於此加入 -->
+
+</Project>

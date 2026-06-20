@@ -1,0 +1,200 @@
+# ============================================================
+# ETS 緊急應變智能通報平台 — Azure DevOps CI/CD Pipeline
+# 對應規格：ETS-技術規劃規格書-v3.1 §14.5
+# 目標部署：Windows Server 2022 + IIS 10（非 Docker/K8s）
+# ============================================================
+
+trigger:
+  branches:
+    include:
+      - main
+      - release/*
+  paths:
+    exclude:
+      - docs/**
+      - '*.md'
+
+pr:
+  branches:
+    include:
+      - main
+
+variables:
+  buildConfiguration: 'Release'
+  dotnetVersion: '8.0.x'
+  projectPath: 'src/Ets.WebApi/Ets.WebApi.csproj'
+  publishOutput: '$(Build.ArtifactStagingDirectory)/publish'
+  artifactName: 'ets-webapp'
+
+pool:
+  # Self-hosted Agent 安裝於 Windows Server（可存取院內網路）
+  name: 'ETS-Agents'
+  demands:
+    - Agent.OS -equals Windows_NT
+
+stages:
+  # ──────────────────────────────────────────────────────────
+  # Stage 1：Build + Test
+  # ──────────────────────────────────────────────────────────
+  - stage: Build
+    displayName: '🔨 Build & Test'
+    jobs:
+      - job: BuildAndTest
+        displayName: 'Build, Test, Publish'
+        steps:
+          - task: UseDotNet@2
+            displayName: '安裝 .NET SDK $(dotnetVersion)'
+            inputs:
+              packageType: 'sdk'
+              version: '$(dotnetVersion)'
+
+          - task: DotNetCoreCLI@2
+            displayName: 'dotnet restore'
+            inputs:
+              command: 'restore'
+              projects: '**/*.csproj'
+              feedsToUse: 'select'
+
+          - task: DotNetCoreCLI@2
+            displayName: 'dotnet build'
+            inputs:
+              command: 'build'
+              projects: '**/*.csproj'
+              arguments: '--configuration $(buildConfiguration) --no-restore'
+
+          - task: DotNetCoreCLI@2
+            displayName: 'dotnet test (Unit Tests)'
+            inputs:
+              command: 'test'
+              projects: 'tests/Ets.UnitTests/Ets.UnitTests.csproj'
+              arguments: >
+                --configuration $(buildConfiguration)
+                --no-build
+                --collect:"XPlat Code Coverage"
+                --logger trx
+                --results-directory $(Agent.TempDirectory)/TestResults
+            continueOnError: false
+
+          - task: PublishTestResults@2
+            displayName: '發布測試報告'
+            condition: always()
+            inputs:
+              testResultsFormat: 'VSTest'
+              testResultsFiles: '$(Agent.TempDirectory)/TestResults/**/*.trx'
+
+          - task: PublishCodeCoverageResults@2
+            displayName: '發布程式碼覆蓋率'
+            condition: always()
+            inputs:
+              summaryFileLocation: '$(Agent.TempDirectory)/TestResults/**/coverage.cobertura.xml'
+
+          - task: DotNetCoreCLI@2
+            displayName: 'dotnet publish'
+            inputs:
+              command: 'publish'
+              publishWebProjects: false
+              projects: '$(projectPath)'
+              arguments: >
+                --configuration $(buildConfiguration)
+                --no-build
+                --runtime win-x64
+                --self-contained false
+                --output $(publishOutput)
+
+          # 將 publish 輸出打包為 zip，檔名含版本號
+          - task: ArchiveFiles@2
+            displayName: '打包為 zip'
+            inputs:
+              rootFolderOrFile: '$(publishOutput)'
+              includeRootFolder: false
+              archiveType: 'zip'
+              archiveFile: >
+                $(Build.ArtifactStagingDirectory)/ets-$(Build.BuildNumber).zip
+              replaceExistingArchive: true
+
+          - task: PublishBuildArtifacts@1
+            displayName: '上傳 Artifact'
+            inputs:
+              PathtoPublish: '$(Build.ArtifactStagingDirectory)'
+              ArtifactName: '$(artifactName)'
+              publishLocation: 'Container'
+
+  # ──────────────────────────────────────────────────────────
+  # Stage 2：Deploy to Dev
+  # ──────────────────────────────────────────────────────────
+  - stage: DeployDev
+    displayName: '🚀 Deploy → Dev'
+    dependsOn: Build
+    condition: >
+      and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
+    variables:
+      deployTarget: 'DEV'
+      appServer: '10.0.1.100'       # Dev App Server IP（請依院方調整）
+      healthCheckUrl: 'https://ets-dev.hospital.internal/health/ready'
+    jobs:
+      - deployment: DeployToDev
+        displayName: 'Deploy to Dev Server'
+        environment: 'ETS-Dev'
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - template: deploy-steps.yml
+                  parameters:
+                    artifactName: '$(artifactName)'
+                    buildNumber: '$(Build.BuildNumber)'
+                    appServer: '$(appServer)'
+                    healthCheckUrl: '$(healthCheckUrl)'
+
+  # ──────────────────────────────────────────────────────────
+  # Stage 3：Deploy to UAT（手動核准）
+  # ──────────────────────────────────────────────────────────
+  - stage: DeployUat
+    displayName: '✅ Deploy → UAT'
+    dependsOn: DeployDev
+    condition: succeeded()
+    variables:
+      deployTarget: 'UAT'
+      appServer: '10.0.1.101'
+      healthCheckUrl: 'https://ets-uat.hospital.internal/health/ready'
+    jobs:
+      - deployment: DeployToUat
+        displayName: 'Deploy to UAT Server'
+        environment: 'ETS-UAT'       # 此 environment 設有手動核准 Gate
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - template: deploy-steps.yml
+                  parameters:
+                    artifactName: '$(artifactName)'
+                    buildNumber: '$(Build.BuildNumber)'
+                    appServer: '$(appServer)'
+                    healthCheckUrl: '$(healthCheckUrl)'
+
+  # ──────────────────────────────────────────────────────────
+  # Stage 4：Deploy to Production（雙人核准）
+  # ──────────────────────────────────────────────────────────
+  - stage: DeployProd
+    displayName: '🏭 Deploy → Production'
+    dependsOn: DeployUat
+    condition: >
+      and(succeeded(), startsWith(variables['Build.SourceBranch'], 'refs/heads/release/'))
+    variables:
+      deployTarget: 'PROD'
+      appServer: '10.0.1.10'        # Production Active Server
+      healthCheckUrl: 'https://ets.hospital.internal/health/ready'
+    jobs:
+      - deployment: DeployToProd
+        displayName: 'Deploy to Production Server'
+        environment: 'ETS-Production' # 此 environment 設有雙人核准 Gate
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - template: deploy-steps.yml
+                  parameters:
+                    artifactName: '$(artifactName)'
+                    buildNumber: '$(Build.BuildNumber)'
+                    appServer: '$(appServer)'
+                    healthCheckUrl: '$(healthCheckUrl)'

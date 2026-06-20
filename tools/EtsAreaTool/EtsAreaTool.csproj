@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <RootNamespace>EtsAreaTool</RootNamespace>
+    <AssemblyName>ets-area-tool</AssemblyName>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Description>ETS Area Whitelist Encryption Tool — 授權主管工作機使用，勿部署於正式伺服器</Description>
+    <!-- 發佈為單一執行檔 -->
+    <PublishSingleFile>true</PublishSingleFile>
+    <PublishTrimmed>false</PublishTrimmed>
+    <SelfContained>false</SelfContained>
+    <!-- Windows cmd 中文輸出 -->
+    <InvariantGlobalization>false</InvariantGlobalization>
+    <!-- 不產生 XML 文件 -->
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- 共用 AesGcmHelper（直接參考 Infrastructure 層）-->
+    <ProjectReference Include="..\..\src\Ets.Infrastructure\Ets.Infrastructure.csproj" />
+  </ItemGroup>
+
+</Project>

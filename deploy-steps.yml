@@ -1,0 +1,45 @@
+# ============================================================
+# deploy-steps.yml — 共用部署步驟 Template
+# 被 azure-pipelines.yml 各 Stage 引用
+# ============================================================
+
+parameters:
+  - name: artifactName
+    type: string
+  - name: buildNumber
+    type: string
+  - name: appServer
+    type: string
+  - name: healthCheckUrl
+    type: string
+
+steps:
+  - download: current
+    artifact: '${{ parameters.artifactName }}'
+    displayName: '下載 Build Artifact'
+
+  - task: PowerShell@2
+    displayName: '執行 deploy.ps1（Blue-Green + Auto-Rollback）'
+    inputs:
+      targetType: 'filePath'
+      # deploy.ps1 預先放置於 App Server 之 C:\Deploy\
+      filePath: 'C:\Deploy\deploy.ps1'
+      arguments: >
+        -NewVersionZip "$(Pipeline.Workspace)\${{ parameters.artifactName }}\ets-${{ parameters.buildNumber }}.zip"
+        -HealthCheckUrl "${{ parameters.healthCheckUrl }}"
+      errorActionPreference: 'stop'
+      workingDirectory: 'C:\Deploy'
+
+  - task: PowerShell@2
+    displayName: 'Smoke Test — /health/ready'
+    inputs:
+      targetType: 'inline'
+      script: |
+        $url = "${{ parameters.healthCheckUrl }}"
+        Write-Host "Smoke testing: $url"
+        $resp = Invoke-WebRequest $url -SkipCertificateCheck -TimeoutSec 30
+        if ($resp.StatusCode -ne 200) {
+          Write-Error "Health check failed: HTTP $($resp.StatusCode)"
+          exit 1
+        }
+        Write-Host "Smoke test passed: HTTP $($resp.StatusCode)"

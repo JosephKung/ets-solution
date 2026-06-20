@@ -1,0 +1,41 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <RootNamespace>Ets.WebApi</RootNamespace>
+    <AssemblyName>Ets.WebApi</AssemblyName>
+    <Description>ETS 緊急應變平台 — 表現層。包含 ASP.NET Core Controllers、SignalR Hub、Middleware、Swagger 設定。</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Ets.Infrastructure\Ets.Infrastructure.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Swagger / OpenAPI -->
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="7.3.2" />
+
+    <!-- Health Checks -->
+    <PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks" Version="8.0.16" />
+    <PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks.EntityFrameworkCore" Version="8.0.16" />
+
+    <!-- Serilog ASP.NET Core 整合 -->
+    <PackageReference Include="Serilog.AspNetCore" Version="9.0.0" />
+    <PackageReference Include="Serilog.Formatting.Compact" Version="3.0.0" />
+    <PackageReference Include="Serilog.Enrichers.Environment" Version="3.0.0" />
+
+    <!-- MediatR -->
+    <PackageReference Include="MediatR" Version="12.4.1" />
+  </ItemGroup>
+
+  <!-- appsettings 檔案複製到輸出目錄（供測試專案讀取）-->
+  <ItemGroup>
+    <Content Update="appsettings*.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Middlewares\" />
+    <Folder Include="Controllers\" />
+  </ItemGroup>
+
+</Project>

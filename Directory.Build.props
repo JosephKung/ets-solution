@@ -1,0 +1,33 @@
+<Project>
+  <!-- 全 Solution 共用 MSBuild 屬性 -->
+  <PropertyGroup>
+    <!-- 目標框架 -->
+    <TargetFramework>net8.0</TargetFramework>
+    <!-- 啟用 Nullable Reference Types -->
+    <Nullable>enable</Nullable>
+    <!-- 啟用隱式 using -->
+    <ImplicitUsings>enable</ImplicitUsings>
+    <!-- 將警告視為錯誤（可在 CI 強制執行）-->
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <!-- 產品版本資訊 -->
+    <Version>1.0.0</Version>
+    <Company>Chang Gung Memorial Hospital</Company>
+    <Product>ETS 緊急應變智能通報平台</Product>
+    <Copyright>© 2024 Chang Gung Memorial Hospital. All rights reserved.</Copyright>
+    <!-- 確保 XML 文件產生（Swagger 需要）-->
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <!-- 隱藏 XML 文件警告 -->
+    <NoWarn>$(NoWarn);1591</NoWarn>
+    <!-- 分析器設定 -->
+    <AnalysisMode>Recommended</AnalysisMode>
+  </PropertyGroup>
+
+  <!-- 全 Solution 共用 NuGet 套件版本（中央套件管理前置作業）-->
+  <ItemGroup>
+    <!-- 程式碼分析器 -->
+    <PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="8.0.0">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+</Project>

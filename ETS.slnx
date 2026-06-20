@@ -1,0 +1,12 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/ETS.Application/ETS.Application.csproj" />
+    <Project Path="src/ETS.Domain/ETS.Domain.csproj" />
+    <Project Path="src/ETS.Infrastructure/ETS.Infrastructure.csproj" />
+    <Project Path="src/ETS.WebApi/ETS.WebApi.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/ETS.IntegrationTests/ETS.IntegrationTests.csproj" />
+    <Project Path="tests/ETS.UnitTests/ETS.UnitTests.csproj" />
+  </Folder>
+</Solution>

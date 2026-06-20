@@ -1,0 +1,24 @@
+{
+  "profiles": {
+    "ETS.WebApi": {
+      "commandName": "Project",
+      "launchUrl": "http://localhost/ETS",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      },
+      "applicationUrl": "https://www.joseph.com/ETS;http://localhost/ETS"
+    },
+    "Profile 1": {
+      "commandName": "IIS",
+      "launchUrl": "http://localhost/ETS"
+    }
+  },
+  "iisSettings": {
+    "windowsAuthentication": true,
+    "anonymousAuthentication": true,
+    "iis": {
+      "applicationUrl": "http://localhost/ETS",
+      "sslPort": 0
+    }
+  }
+}

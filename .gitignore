@@ -1,0 +1,95 @@
+## ──────────────────────────────────────────────
+## ETS 專案 .gitignore
+## 適用：.NET 8 / Visual Studio 2022 / VS Code
+## ──────────────────────────────────────────────
+
+# ── 建置輸出 ──────────────────────────────────
+[Bb]in/
+[Oo]bj/
+[Oo]ut/
+[Ll]og/
+[Ll]ogs/
+
+# ── Visual Studio 本機設定 ────────────────────
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# ── Visual Studio Code ────────────────────────
+.vscode/
+!.vscode/extensions.json
+!.vscode/settings.json
+
+# ── NuGet ────────────────────────────────────
+*.nupkg
+*.snupkg
+packages/
+!**/packages/build/
+project.lock.json
+project.fragment.lock.json
+artifacts/
+
+# ── .NET 發行輸出 ─────────────────────────────
+publish/
+PublishProfiles/
+
+# ── Entity Framework Migrations 暫存 ──────────
+# ※ Migrations 資料夾本身需要 commit
+efbundle
+
+# ── 測試輸出 ──────────────────────────────────
+TestResults/
+coverage/
+*.coverage
+*.coveragexml
+*.trx
+
+# ── 環境設定（含敏感資訊）────────────────────
+appsettings.Production.json
+appsettings.Staging.json
+appsettings.UAT.json
+*.secrets.json
+secrets.json
+.env
+.env.*
+!.env.example
+
+# ── 加密白名單檔案（產出物，不入版控）────────
+*.etsarea
+
+# ── DPAPI 加密金鑰／憑證 ──────────────────────
+*.pfx
+*.p12
+*.cer
+*.key
+*.pem
+
+# ── OS 相關 ───────────────────────────────────
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Linux
+*~
+
+# ── Rider IDE ─────────────────────────────────
+.idea/
+*.sln.iml
+
+# ── 部署暫存 ──────────────────────────────────
+deploy/temp/
+*.zip
+*.tar.gz
+
+# ── 監控 / 遙測本機輸出 ───────────────────────
+ApplicationInsights.config.bak
